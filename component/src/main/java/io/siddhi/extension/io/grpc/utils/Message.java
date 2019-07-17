@@ -18,6 +18,7 @@ package io.siddhi.extension.io.grpc.utils;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.MessageLite;
 import io.grpc.Status;
 import io.siddhi.core.exception.SiddhiAppCreationException;
 
@@ -208,6 +209,7 @@ public class Message extends GeneratedMessageV3 {
                         }
                         break;
                     }
+
                     default: {
                         throw new SiddhiAppCreationException("Error while calculating the serialized type. Field " +
                                 "type is not supported : " + fieldDescriptor.getType());

@@ -2,9 +2,13 @@ package io.siddhi.extension.io.grpc.sink;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
 import io.siddhi.core.stream.input.InputHandler;
+import io.siddhi.extension.io.grpc.utils.MIService.InvokeSequenceGrpc;
+import io.siddhi.extension.io.grpc.utils.MIService.SequenceCallRequest;
+import io.siddhi.extension.io.grpc.utils.MIService.SequenceCallResponse;
 import io.siddhi.extension.io.grpc.utils.TestService;
 import io.siddhi.extension.io.grpc.utils.Message;
 import io.siddhi.extension.io.grpc.utils.MessageUtils;
@@ -27,7 +31,7 @@ public class TestCaseOfGrpcSink {
         startServer();
         String payload =  String.valueOf(server.getPort());
         String inStreamDefinition = ""
-                + "@sink(type='grpc', port = \'" + payload +"\', service = \'TestService\', method = \'Create\') "
+                + "@sink(type='grpc', port = \'" + payload +"\', service = \'InvokeSequence\', method = \'CallSequenceWithResponse\') "
                 + "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
@@ -51,7 +55,16 @@ public class TestCaseOfGrpcSink {
         if (server != null) {
             throw new IllegalStateException("Already started");
         }
-        server = ServerBuilder.forPort(0).addService(new TestService()).build();
+        server = ServerBuilder.forPort(0).addService(new InvokeSequenceGrpc.InvokeSequenceImplBase() {
+            @Override
+            public void callSequenceWithResponse(SequenceCallRequest request, StreamObserver<SequenceCallResponse> responseObserver) {
+                System.out.println("Server hit");
+//                super.callSequenceWithResponse(request, responseObserver);
+                SequenceCallResponse response = new SequenceCallResponse();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
+        }).build();
         server.start();
     }
 
@@ -74,7 +87,8 @@ public class TestCaseOfGrpcSink {
 
     @Test
     public void test2() throws Exception {
-        Message sample = MessageUtils.generateProtoMessage("hi", SiddhiMicroIntegratorProto.getDescriptor().findMessageTypeByName("SequenceCallRequest"));
-        System.out.println("hi");
+        Message sample = MessageUtils.generateProtoMessage("hi", SiddhiMicroIntegratorProto.getDescriptor().findMessageTypeByName("SequenceCallResponse"));
+        System.out.println(SiddhiMicroIntegratorProto.getDescriptor().toProto().toString());
+
     }
 }

@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.Descriptors;
 import io.grpc.*;
+import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ClientCalls;
 import io.siddhi.annotation.Example;
 import io.siddhi.annotation.Extension;
@@ -36,8 +37,8 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.grpc.utils.GRPCService.EmptyResponse;
 import io.siddhi.extension.io.grpc.utils.Message;
+import io.siddhi.extension.io.grpc.utils.MessageRegistry;
 import io.siddhi.extension.io.grpc.utils.MessageUtils;
 import io.siddhi.extension.io.grpc.utils.SiddhiMicroIntegratorProto2;
 import io.siddhi.query.api.definition.StreamDefinition;
@@ -124,15 +125,6 @@ public class GRPCSink extends Sink {
         methodName = optionHolder.validateAndGetOption("method").getValue();
         String port = optionHolder.validateAndGetOption("port").getValue();
 
-//        customMethodDescriptor = MethodDescriptor.newBuilder(
-//                    marshallerForReq(GRPCService.Request.class),
-//                    marshallerForResp(EmptyResponse.class))
-//                    .setFullMethodName(
-//                            MethodDescriptor.generateFullMethodName(SERVICE_NAME, "Create"))
-//                    .setType(MethodDescriptor.MethodType.UNARY)
-//                    .setSampledToLocalTracing(true)
-//                    .build();
-
         setMethodDescriptors(serviceName, methodName);
 
         channel = ManagedChannelBuilder.forTarget("dns:///localhost:" + port)
@@ -166,18 +158,24 @@ public class GRPCSink extends Sink {
     }
 
     private void setMethodDescriptors(String serviceName, String methodName) {
+        Descriptors.FileDescriptor fieldDescriptor = SiddhiMicroIntegratorProto2.getDescriptor();
         Descriptors.ServiceDescriptor serviceDescriptor = SiddhiMicroIntegratorProto2.getDescriptor().findServiceByName(serviceName);
         serviceMethodDescriptor = serviceDescriptor.findMethodByName(methodName);
         Descriptors.Descriptor reqMessage = serviceMethodDescriptor.getInputType();
         Descriptors.Descriptor resMessage = serviceMethodDescriptor.getOutputType();
+
+        MessageRegistry messageRegistry = MessageRegistry.getInstance();
+        messageRegistry.addMessageDescriptor(reqMessage.getName(), reqMessage);
+        messageRegistry.addMessageDescriptor(resMessage.getName(), resMessage);
+
         String fullMethodName = generateFullMethodName(serviceDescriptor.getFullName(), methodName);
         this.customMethodDescriptor =
                 MethodDescriptor.<Message, Message>newBuilder()
                         .setType(MessageUtils.getMethodType(serviceMethodDescriptor.toProto()))
                         .setFullMethodName(fullMethodName)
-                        .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                        .setRequestMarshaller(ProtoUtils.marshaller(
                                 Message.newBuilder(reqMessage.getName()).build()))
-                        .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                        .setResponseMarshaller(ProtoUtils.marshaller(
                                 Message.newBuilder(resMessage.getName()).build()))
                         .setSchemaDescriptor(serviceMethodDescriptor)
                         .build();

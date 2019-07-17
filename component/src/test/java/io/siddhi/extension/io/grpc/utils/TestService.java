@@ -12,7 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 public class TestService implements BindableService {
-    private String SERVICE_NAME = "TestService";
+    private String SERVICE_NAME = "InvokeSequence";
     @Override
     public ServerServiceDefinition bindService() {
         ServerServiceDefinition.Builder ssd = ServerServiceDefinition.builder(SERVICE_NAME);
@@ -33,7 +33,7 @@ public class TestService implements BindableService {
                     marshallerForReq(GRPCService.Request.class),
                     marshallerForResp(EmptyResponse.class))
                     .setFullMethodName(
-                            MethodDescriptor.generateFullMethodName(SERVICE_NAME, "Create"))
+                            MethodDescriptor.generateFullMethodName(SERVICE_NAME, "CallSequenceWithResponse"))
                     .setType(MethodDescriptor.MethodType.UNARY)
                     .setSampledToLocalTracing(true)
                     .build();
