@@ -1,4 +1,4 @@
-package io.siddhi.extension.io.grpc;
+package io.siddhi.extension.io.grpc.utils;
 
 import io.grpc.BindableService;
 import io.grpc.ServerCallHandler;
@@ -6,8 +6,7 @@ import io.grpc.ServerServiceDefinition;
 import io.grpc.stub.ServerCalls;
 import io.grpc.stub.StreamObserver;
 import io.siddhi.extension.io.grpc.sink.GRPCSink;
-import io.siddhi.extension.io.grpc.util.GRPCService;
-import io.siddhi.extension.io.grpc.util.GRPCService.EmptyResponse;
+import io.siddhi.extension.io.grpc.utils.GRPCService.EmptyResponse;
 
 public class TestService implements BindableService {
     private String SERVICE_NAME = "TestService";

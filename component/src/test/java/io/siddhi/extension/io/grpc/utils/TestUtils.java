@@ -1,7 +1,8 @@
-package io.siddhi.extension.io.grpc;
+package io.siddhi.extension.io.grpc.utils;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.siddhi.extension.io.grpc.utils.TestService;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

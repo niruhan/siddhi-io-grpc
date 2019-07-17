@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.siddhi.extension.io.grpc.util;
+package io.siddhi.extension.io.grpc.utils;
 
 public class GRPCStubHolder {
     private static GRPCStubHolder instance = new GRPCStubHolder();

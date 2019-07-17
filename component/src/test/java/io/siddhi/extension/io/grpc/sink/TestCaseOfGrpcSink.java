@@ -4,13 +4,11 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.siddhi.core.SiddhiAppRuntime;
 import io.siddhi.core.SiddhiManager;
-import io.siddhi.core.event.Event;
 import io.siddhi.core.stream.input.InputHandler;
-import io.siddhi.core.stream.output.StreamCallback;
-import io.siddhi.core.util.SiddhiTestHelper;
-import io.siddhi.extension.io.grpc.TestService;
+import io.siddhi.extension.io.grpc.utils.TestService;
+import io.siddhi.extension.io.grpc.utils.Message;
+import io.siddhi.extension.io.grpc.utils.MessageUtils;
 import org.apache.log4j.Logger;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -21,8 +19,8 @@ public class TestCaseOfGrpcSink {
     private Server server;
 
     @Test
-    public void testHTTPRequestResponse1() throws Exception {
-        log.info("Send a POST request with a json body message and receive the response");
+    public void test1() throws Exception {
+        log.info("");
         SiddhiManager siddhiManager = new SiddhiManager();
 
         startServer();
@@ -71,5 +69,10 @@ public class TestCaseOfGrpcSink {
             return;
         }
         throw new RuntimeException("Unable to shutdown server");
+    }
+
+    @Test
+    public void test2() throws Exception {
+        Message sample = MessageUtils.generateProtoMessage("hi", );
     }
 }

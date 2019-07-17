@@ -20,7 +20,6 @@ package io.siddhi.extension.io.grpc.sink;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.*;
 import io.grpc.stub.ClientCalls;
 import io.siddhi.annotation.Example;
@@ -36,17 +35,14 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.grpc.util.GRPCStubHolder;
-import io.siddhi.extension.io.grpc.util.GRPCService.Request;
-import io.siddhi.extension.io.grpc.util.GRPCService.EmptyResponse;
+import io.siddhi.extension.io.grpc.utils.GRPCService.Request;
+import io.siddhi.extension.io.grpc.utils.GRPCService.EmptyResponse;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Random;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This is a sample class-level comment, explaining what the extension class does.

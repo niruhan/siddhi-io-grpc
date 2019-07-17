@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package io.siddhi.extension.io.grpc.util;
+package io.siddhi.extension.io.grpc.utils;
 
 import com.google.protobuf.Descriptors;
 
@@ -61,7 +61,7 @@ public class MessageRegistry {
         return Collections.unmodifiableMap(methodDescriptors);
     }
 
-    void addMethodDescriptor(String methodName, Descriptors.MethodDescriptor methodDescriptor) {
-        methodDescriptors.put(methodName, methodDescriptor);
-    }
+//    void addMethodDescriptor(String methodName, Descriptors.MethodDescriptor methodDescriptor) {
+//        methodDescriptors.put(methodName, methodDescriptor);
+//    }
 }

@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package io.siddhi.extension.io.grpc.util;
+package io.siddhi.extension.io.grpc.utils;
 
 import com.google.protobuf.Descriptors;
 import org.slf4j.Logger;
@@ -33,20 +33,15 @@ public class MessageUtils {
     /**
      * Returns protobuf message corresponding to the B7a message.
      *
-     * @param responseValue B7a message.
+     * @param payload B7a message.
      * @param outputType    protobuf message type.
      * @return generated protobuf message.
      */
-    public static Message generateProtoMessage(String responseValue, Descriptors.Descriptor outputType) {
+    public static Message generateProtoMessage(String payload, Descriptors.Descriptor outputType) {
         Message.Builder responseBuilder = Message.newBuilder(outputType.getName());
-        int stringIndex = 0;
-        int intIndex = 0;
-        int floatIndex = 0;
-        int boolIndex = 0;
-        int refIndex = 0;
         for (Descriptors.FieldDescriptor fieldDescriptor : outputType.getFields()) {
             String fieldName = fieldDescriptor.getName();
-            responseBuilder.addField(fieldName, responseValue);
+            responseBuilder.addField(fieldName, payload);
         }
         return responseBuilder.build();
     }
