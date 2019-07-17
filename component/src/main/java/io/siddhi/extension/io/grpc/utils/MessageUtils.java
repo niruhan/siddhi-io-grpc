@@ -15,7 +15,9 @@
  */
 package io.siddhi.extension.io.grpc.utils;
 
+import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
+import io.grpc.MethodDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,5 +100,26 @@ public class MessageUtils {
                     .toLowerCase(Locale.ENGLISH));
         }
         return camelCaseString.toString();
+    }
+
+    /**
+     * Util method to get method type.
+     *
+     * @param methodDescriptorProto method descriptor proto.
+     * @return service method type.
+     */
+    public static MethodDescriptor.MethodType getMethodType(DescriptorProtos.MethodDescriptorProto
+                                                                    methodDescriptorProto) {
+        if (methodDescriptorProto.getClientStreaming() && methodDescriptorProto.getServerStreaming()) {
+            return MethodDescriptor.MethodType.BIDI_STREAMING;
+        } else if (!(methodDescriptorProto.getClientStreaming() || methodDescriptorProto.getServerStreaming())) {
+            return MethodDescriptor.MethodType.UNARY;
+        } else if (methodDescriptorProto.getServerStreaming()) {
+            return MethodDescriptor.MethodType.SERVER_STREAMING;
+        } else if (methodDescriptorProto.getClientStreaming()) {
+            return MethodDescriptor.MethodType.CLIENT_STREAMING;
+        } else {
+            return MethodDescriptor.MethodType.UNKNOWN;
+        }
     }
 }

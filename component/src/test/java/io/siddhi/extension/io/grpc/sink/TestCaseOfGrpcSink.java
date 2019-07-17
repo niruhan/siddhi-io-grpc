@@ -10,6 +10,7 @@ import io.siddhi.extension.io.grpc.utils.Message;
 import io.siddhi.extension.io.grpc.utils.MessageUtils;
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
+import io.siddhi.extension.io.grpc.utils.SiddhiMicroIntegratorProto;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,7 @@ public class TestCaseOfGrpcSink {
         startServer();
         String payload =  String.valueOf(server.getPort());
         String inStreamDefinition = ""
-                + "@sink(type='grpc', port = \'" + payload +"\') "
+                + "@sink(type='grpc', port = \'" + payload +"\', service = \'TestService\', method = \'Create\') "
                 + "define stream FooStream (message String);";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(inStreamDefinition);
@@ -73,6 +74,7 @@ public class TestCaseOfGrpcSink {
 
     @Test
     public void test2() throws Exception {
-        Message sample = MessageUtils.generateProtoMessage("hi", );
+        Message sample = MessageUtils.generateProtoMessage("hi", SiddhiMicroIntegratorProto.getDescriptor().findMessageTypeByName("SequenceCallRequest"));
+        System.out.println("hi");
     }
 }

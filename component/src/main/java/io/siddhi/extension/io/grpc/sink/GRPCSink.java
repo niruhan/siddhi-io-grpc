@@ -20,6 +20,7 @@ package io.siddhi.extension.io.grpc.sink;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.protobuf.Descriptors;
 import io.grpc.*;
 import io.grpc.stub.ClientCalls;
 import io.siddhi.annotation.Example;
@@ -35,14 +36,16 @@ import io.siddhi.core.util.snapshot.state.State;
 import io.siddhi.core.util.snapshot.state.StateFactory;
 import io.siddhi.core.util.transport.DynamicOptions;
 import io.siddhi.core.util.transport.OptionHolder;
-import io.siddhi.extension.io.grpc.utils.GRPCService.Request;
 import io.siddhi.extension.io.grpc.utils.GRPCService.EmptyResponse;
+import io.siddhi.extension.io.grpc.utils.Message;
+import io.siddhi.extension.io.grpc.utils.MessageUtils;
+import io.siddhi.extension.io.grpc.utils.SiddhiMicroIntegratorProto2;
 import io.siddhi.query.api.definition.StreamDefinition;
 import org.apache.log4j.Logger;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import static io.grpc.MethodDescriptor.generateFullMethodName;
 
 /**
  * This is a sample class-level comment, explaining what the extension class does.
@@ -67,17 +70,14 @@ import java.util.Random;
         }
 )
 
-// for more information refer https://siddhi-io.github.io/siddhi/documentation/siddhi-4.x/query-guide-4.x/#sink
-
 public class GRPCSink extends Sink {
     private static final Logger logger = Logger.getLogger(GRPCSink.class.getName());
-//    private GrpcBlockingStub blockingStub;
-//    private InvokeSequenceStub asyncStub;
     private SiddhiAppContext siddhiAppContext;
-    private Random random = new Random();
     private ManagedChannel channel;
-    private static String serviceName  = "TestService";
-//    private final Semaphore limiter = new Semaphore(100);
+    private static String serviceName;
+    private static String methodName;
+    private MethodDescriptor<Message, Message> customMethodDescriptor;
+    private Descriptors.MethodDescriptor serviceMethodDescriptor;
 
     /**
      * Returns the list of classes which this sink can consume.
@@ -108,7 +108,7 @@ public class GRPCSink extends Sink {
     }
 
     /**
-     * The initialization method for {@link Sink}, will be called before other methods. It used to validate
+     * The initialization customMethodDescriptor for {@link Sink}, will be called before other methods. It used to validate
      * all configurations and to get initial values.
      * @param streamDefinition  containing stream definition bind to the {@link Sink}
      * @param optionHolder            Option holder containing static and dynamic configuration related
@@ -120,15 +120,24 @@ public class GRPCSink extends Sink {
     protected StateFactory init(StreamDefinition streamDefinition, OptionHolder optionHolder, ConfigReader configReader,
                                 SiddhiAppContext siddhiAppContext) {
         this.siddhiAppContext = siddhiAppContext;
-//        this.serviceName = "TestService"; //todo: get from options holder
+        serviceName = optionHolder.validateAndGetOption("service").getValue();
+        methodName = optionHolder.validateAndGetOption("method").getValue();
         String port = optionHolder.validateAndGetOption("port").getValue();
+
+//        customMethodDescriptor = MethodDescriptor.newBuilder(
+//                    marshallerForReq(GRPCService.Request.class),
+//                    marshallerForResp(EmptyResponse.class))
+//                    .setFullMethodName(
+//                            MethodDescriptor.generateFullMethodName(SERVICE_NAME, "Create"))
+//                    .setType(MethodDescriptor.MethodType.UNARY)
+//                    .setSampledToLocalTracing(true)
+//                    .build();
+
+        setMethodDescriptors(serviceName, methodName);
 
         channel = ManagedChannelBuilder.forTarget("dns:///localhost:" + port)
                 .usePlaintext(true)
                 .build();
-
-//        blockingStub = new GrpcBlockingStub(channel);
-//        GRPCStubHolder.getInstance().setBlockingStub(blockingStub);
 
         return null;
     }
@@ -136,16 +145,15 @@ public class GRPCSink extends Sink {
     @Override
     public void publish(Object payload, DynamicOptions dynamicOptions, State state) throws ConnectionUnavailableException {
 
-        ClientCall<Request, EmptyResponse> call = channel.newCall(CREATE_METHOD, CallOptions.DEFAULT);
-        byte[] myvar = "Any String you want".getBytes();
-        Request request = new Request(myvar);
+        ClientCall<Message, Message> call = channel.newCall(customMethodDescriptor, CallOptions.DEFAULT);
+        String myPayload = "hi";
+        Message requestMessage = MessageUtils.generateProtoMessage(myPayload, serviceMethodDescriptor.getInputType());
 
-        ListenableFuture<EmptyResponse> res = ClientCalls.futureUnaryCall(call, request);
-//        res.addListener(, MoreExecutors.directExecutor());
+        ListenableFuture<Message> res = ClientCalls.futureUnaryCall(call, requestMessage);
 
-        Futures.addCallback(res, new FutureCallback<EmptyResponse>() {
+        Futures.addCallback(res, new FutureCallback<Message>() {
             @Override
-            public void onSuccess(EmptyResponse result) {
+            public void onSuccess(Message result) {
                 System.out.println("Success!");
             }
 
@@ -157,60 +165,26 @@ public class GRPCSink extends Sink {
         });
     }
 
-    public static MethodDescriptor<Request, EmptyResponse> CREATE_METHOD =
-            MethodDescriptor.newBuilder(
-                    marshallerForReq(Request.class),
-                    marshallerForResp(EmptyResponse.class))
-                    .setFullMethodName(
-                            MethodDescriptor.generateFullMethodName(serviceName, "Create"))
-                    .setType(MethodDescriptor.MethodType.UNARY)
-                    .setSampledToLocalTracing(true)
-                    .build();
-
-    static <T> MethodDescriptor.Marshaller<T> marshallerForReq(Class<T> clz) {
-        return new MethodDescriptor.Marshaller<T>() {
-            @Override
-            public InputStream stream(T value) {
-                return new ByteArrayInputStream(((Request) value).getValue());
-            }
-
-            @Override
-            public T parse(InputStream stream) {
-                System.out.println("received");
-//                stream.;
-                byte[] myvar = "Any String you want".getBytes();
-                Request request = new Request(myvar);
-                return (T) request; //gson.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), clz);
-                //todo: find way to get byte[] from inputstream
-            }
-        };
-    }
-
-    static <T> MethodDescriptor.Marshaller<T> marshallerForResp(Class<T> clz) {
-        return new MethodDescriptor.Marshaller<T>() {
-            @Override
-            public InputStream stream(T value) {
-                return new ByteArrayInputStream(((EmptyResponse) value).getResponse());
-            }
-
-            @Override
-            public T parse(InputStream stream) {
-                System.out.println("received");
-//                stream.;
-                byte[] myvar = "Any String you want".getBytes();
-                EmptyResponse response = new EmptyResponse();
-                return (T) response; //gson.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), clz);
-                //todo: find way to get byte[] from inputstream
-            }
-        };
-    }
-
-    private String generateJSONStringFromObjectPayload(Object payload) {
-        return null; //todo: implement function
+    private void setMethodDescriptors(String serviceName, String methodName) {
+        Descriptors.ServiceDescriptor serviceDescriptor = SiddhiMicroIntegratorProto2.getDescriptor().findServiceByName(serviceName);
+        serviceMethodDescriptor = serviceDescriptor.findMethodByName(methodName);
+        Descriptors.Descriptor reqMessage = serviceMethodDescriptor.getInputType();
+        Descriptors.Descriptor resMessage = serviceMethodDescriptor.getOutputType();
+        String fullMethodName = generateFullMethodName(serviceDescriptor.getFullName(), methodName);
+        this.customMethodDescriptor =
+                MethodDescriptor.<Message, Message>newBuilder()
+                        .setType(MessageUtils.getMethodType(serviceMethodDescriptor.toProto()))
+                        .setFullMethodName(fullMethodName)
+                        .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                                Message.newBuilder(reqMessage.getName()).build()))
+                        .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                                Message.newBuilder(resMessage.getName()).build()))
+                        .setSchemaDescriptor(serviceMethodDescriptor)
+                        .build();
     }
 
     /**
-     * This method will be called before the processing method.
+     * This customMethodDescriptor will be called before the processing customMethodDescriptor.
      * Intention to establish connection to publish event.
      * @throws ConnectionUnavailableException if end point is unavailable the ConnectionUnavailableException thrown
      *                                        such that the  system will take care retrying for connection
@@ -222,7 +196,7 @@ public class GRPCSink extends Sink {
 
     /**
      * Called after all publishing is done, or when {@link ConnectionUnavailableException} is thrown
-     * Implementation of this method should contain the steps needed to disconnect from the sink.
+     * Implementation of this customMethodDescriptor should contain the steps needed to disconnect from the sink.
      */
     @Override
     public void disconnect() {
@@ -230,7 +204,7 @@ public class GRPCSink extends Sink {
     }
 
     /**
-     * The method can be called when removing an event receiver.
+     * The customMethodDescriptor can be called when removing an event receiver.
      * The cleanups that have to be done after removing the receiver could be done here.
      */
     @Override
@@ -240,11 +214,11 @@ public class GRPCSink extends Sink {
 
     @Override
     public void shutdown() {
-//        try {
-//            channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
-//        } catch (InterruptedException e) {
-//            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
-//        }
+        try {
+            channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new SiddhiAppRuntimeException(siddhiAppContext.getName() + ": " + e.getMessage());
+        }
         super.shutdown();
     }
 }
