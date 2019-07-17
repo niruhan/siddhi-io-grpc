@@ -30,12 +30,10 @@ public final class SiddhiMicroIntegratorProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_invokesequence_EmptyResponse_fieldAccessorTable;
 
-  public static com.google.protobuf.Descriptors.FileDescriptor
-      getDescriptor() {
+  public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
-      descriptor;
+  private static  com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     String[] descriptorData = {
       "\n\027siddhi_MI_connect.proto\022\016invokesequenc" +
